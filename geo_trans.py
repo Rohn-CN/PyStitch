@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from shapely.geometry import Polygon
-
+from config import CFG
 
 class GeoTrans:
     def __init__(self, cfg, H=np.ones((3, 3))) -> None:
@@ -35,20 +35,41 @@ class GeoTrans:
     def transform_corner_points(self, w, h):
         corner_points_3d = self.get_corner_points_3d(w, h).T  # (3,4)
         assert corner_points_3d.shape == (3, 4), "false"
-        corner_points_trans_3d = self.H @ corner_points_3d  #(3,4)
+        corner_points_trans_3d = self.H @ corner_points_3d  # (3,4)
         assert corner_points_trans_3d.shape == (3, 4), "false"
-        corner_points_trans_norm = (corner_points_trans_3d[:2, :] / corner_points_trans_3d[2, :]).T #(4. 2)
+        corner_points_trans_norm = (corner_points_trans_3d[:2, :] / corner_points_trans_3d[2, :]).T  # (4. 2)
         assert corner_points_trans_norm.shape == (4, 2), "false"
         return corner_points_trans_norm
 
-    def get_geo_transform_model(self,points_image,points_utm):
-        # TODO: numpy 的解方程方法
+    def get_geo_transform_model(self, points_list_image, points_list_utm):
+        """
+        :param points_list_image:  list (n, 2)
+        :param points_list_utm:    list (n, 2)
+        :return:
+        """
+        num_pts = len(points_list_image)
         if self.trans_mode == "four_param":
-            pass
+            A = np.zeros((num_pts * 2, 4))
+            B = np.zeros((num_pts * 2, 1))
+            for i in range(num_pts):
+                x = points_list_image[i][0]
+                y = - points_list_image[i][1]
+                A[i * 2] = np.array([x, -y, 1, 0])
+                A[i * 2 + 1] = np.array([y, x, 0, 1])
+                B[i * 2] = points_list_utm[i][0]
+                B[i * 2 + 1] = points_list_utm[i][1]
+            res = np.linalg.lstsq(A, B, rcond=None)[0]
+            return res
         else:
-            assert False,"specific mode not found"
+            assert False, "specific mode not found"
 
-    def points_image_to_utm(self,points_image,trans_model):
+
+    def points_image_to_utm(self, points_image, trans_model):
+        """
+        :param points_image: (4, 2)
+        :param trans_model: (4, 1)
+        :return:
+        """
         if self.trans_mode == "four_param":
             assert trans_model.shape == (4, 1)
             A = trans_model[0]
@@ -57,8 +78,21 @@ class GeoTrans:
             D = trans_model[3]
             x_utm = A * points_image[:, 0] - B * points_image[:, 1] + C
             y_utm = B * points_image[:, 0] + A * points_image[:, 1] + D
-            return np.hstack([x_utm,y_utm])
+            return np.stack((x_utm, y_utm)).T
         else:
-            assert False,"specific mode not found"
+            assert False, "specific mode not found"
 
 
+
+
+if __name__ == "__main__":
+    config_file = r"D:\PyStitch\configfile\config.yaml"
+    cfg = CFG()
+    cfg.from_config_yaml(config_path=config_file)
+    points_utm = np.random.random((10,2)).tolist()
+    points_image = np.random.random((10,2)).tolist()
+    x = GeoTrans(cfg, H = np.eye(3))
+    res = x.get_geo_transform_model(points_image, points_utm)
+    res2 = x.points_image_to_utm(np.array(points_image), res)
+    print(res2 - points_utm)
+    print(res)

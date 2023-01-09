@@ -30,8 +30,8 @@ class Frame:
         self.h, self.w, self.c = self.image.shape
 
     def crop(self):
-        w = self.w * self.crop_ratio
-        h = self.h * self.resize_ratio
+        w = int(self.w * self.crop_ratio)
+        h = int(self.h * self.resize_ratio)
         crop_border_w = (self.w - w) // 2
         crop_border_h = (self.h - h) // 2
         self.image = self.image[crop_border_w:crop_border_w + w, crop_border_h:crop_border_h + h, :]

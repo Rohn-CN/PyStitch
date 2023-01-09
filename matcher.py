@@ -19,14 +19,13 @@ class Matcher:
         self.inliers = []
         self.goods = []
 
-    def calc_frame_keypoints_info(self, frame, current_image):
-        if self.detector == "sift":
+    def calc_frame_keypoints_info(detector, frame):
+        if detector == "sift":
             sift = cv2.SIFT_create()
-            keypoints, descriptor = sift.detectAndCompute(current_image)
+            keypoints, descriptor = sift.detectAndCompute(frame.image)
             frame.set_keypoints_info(keypoints, descriptor)
         else:
             assert False, "specific detector not found"
-        return frame
 
     def get_good_match(self, frame1: Frame, frame2: Frame):
         matcher = cv2.DescriptorMatcher.create(self.distance_method)

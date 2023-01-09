@@ -38,8 +38,6 @@ class Optimizer:
         rep_err = np.sum(np.sqrt(d[:, 0] + d[:, 1]))
         return rep_err, d.shape[0]
 
-    # TODO:完成这个函数
-
     def min_reproject_optimizer(self, current_frame: Frame, stitch_param: StitchParameter):
         relative_frame_idx = current_frame.relative_frame_index
         relative_frame_overlap = current_frame.relative_frame_overlap
@@ -60,7 +58,7 @@ class Optimizer:
                 else:
                     match_info_temp.append(matcher)
                     relative_frame_idx_temp.append(relative_frame_idx[i])
-                    relative_frame_overlap_temp.append(relative_frame_overlap_temp[i])
+                    relative_frame_overlap_temp.append(relative_frame_overlap[i])
                     frame_temp.append(stitch_param.frame_list[relative_frame_idx[i]])
             else:
                 continue
@@ -85,3 +83,4 @@ class Optimizer:
         stitch_param.add_homo(H)
         corner_points_trans_2d = GeoTrans(self.cfg).transform_corner_points(w, h)
         stitch_param.add_trajectory(corner_points_trans_2d)
+

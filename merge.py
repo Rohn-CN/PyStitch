@@ -3,7 +3,7 @@ import cv2
 import math
 from geo_trans import GeoTrans
 from frame import Frame
-
+from stitch_param import StitchParameter
 
 class Merge:
     def __init__(self, cfg):
@@ -25,6 +25,7 @@ class Merge:
             size_right = int(math.pow(2, self.pyramid_layer)) - size_right
             image = cv2.copyMakeBorder(image, 0, size_bottom, 0, size_right, 0, 0)
         return image
+
     @staticmethod
     def create_patch(image, left_top, width, height):
         """
@@ -106,8 +107,7 @@ class Merge:
             src_pyr = image_src_pyr[i]
             mask_pyr = diff_mask_pyr[self.pyramid_layer - 1 - i]
             merge_map = dst_pyr.copy()
-            # todo:完成函数
-            h,w = mask_pyr.shape
+            h, w = mask_pyr.shape
             idx = mask_pyr > 0
             idx_3d = np.repeat(idx.reshape(1, h, w), axis=0).transpose(1, 2, 0)
             merge_map[idx_3d] = src_pyr[idx_3d]
@@ -137,25 +137,29 @@ class Merge:
 
         return patch_info
 
-    def patch_merge(self, image_dst, mask_dst, image_src, mask_src, patch_info,
-                    patch_corner_points_utm):
+    def patch_merge(self, stitch_param:StitchParameter, image_src, mask_src, patch_info):
         left_top = patch_info["left_top"]
         patch_width = patch_info["patch_width"]
         patch_height = patch_info["patch_height"]
 
-        image_dst_patch = self.create_patch(image_dst, left_top, patch_width, patch_height)
+        image_dst_patch = self.create_patch(stitch_param.image_dst, left_top, patch_width, patch_height)
         image_src_patch = self.create_patch(image_src, left_top, patch_width, patch_height)
-        mask_dst_patch = self.create_patch(mask_dst, left_top, patch_width, patch_height)
+        mask_dst_patch = self.create_patch(stitch_param.mask_dst, left_top, patch_width, patch_height)
         mask_src_patch = self.create_patch(mask_src, left_top, patch_width, patch_height)
 
         self.laplace_merge(image_dst_patch, mask_dst_patch, image_src_patch, mask_src_patch)
 
         image_dst_patch = self.create_patch(image_dst_patch, [0, 0], patch_width, patch_height)
         mask_dst_patch = self.create_patch(mask_dst_patch, [0, 0], patch_width, patch_height)
+        stitch_param.image_dst[left_top[0] + patch_height,left_top[1] + patch_width,:] = image_dst_patch
+        stitch_param.mask_dst[left_top[0] + patch_height,left_top[1] + patch_width[,:]] = mask_dst_patch
 
-        # TODO:一些保存操作
+        # 添加roi到stitch_param
+        stitch_param.add_roi(image_dst_patch)
+        stitch_param.add_roi_mask(mask_dst_patch)
 
-    def auto_expand(self, H_bias, image_dst, mask_dst, image_src, mask_src, map_size, H, mask, current_frame: Frame):
+
+    def auto_expand(self, H_bias, image_dst, mask_dst, map_size, H, mask, current_frame: Frame):
         image = current_frame.image
         w = current_frame.w
         h = current_frame.h
@@ -174,6 +178,8 @@ class Merge:
         if max_x < map_max_x and max_y < map_max_y and min_x > map_min_x and min_y > map_min_y:
             map_width = map_max_x - map_min_x
             map_height = map_max_y - map_min_y
+            image_dst_temp = image_dst.copy()
+            mask_dst_temp = mask_dst.copy()
         else:
             top_expand = map_min_y - int(min_y) if min_y <= map_min_y else 0
             map_min_y = int(min_y) if min_y <= map_min_y else map_min_y
@@ -184,8 +190,8 @@ class Merge:
             right_expand = int(max_y) + 1 - map_max_y if max_y >= map_max_y else 0
             map_max_y = int(max_y) + 1 if max_y >= map_max_y else map_max_y
 
-            image_dst = cv2.copyMakeBorder(image_dst, top_expand, bottom_expand, left_expand, right_expand)
-            mask_dst = cv2.copyMakeBorder(mask_dst, top_expand, bottom_expand, left_expand, right_expand)
+            image_dst_temp = cv2.copyMakeBorder(image_dst, top_expand, bottom_expand, left_expand, right_expand)
+            mask_dst_temp = cv2.copyMakeBorder(mask_dst, top_expand, bottom_expand, left_expand, right_expand)
             map_width = map_max_x - map_min_x
             map_height = map_max_y - map_min_y
 
@@ -196,8 +202,10 @@ class Merge:
         map_size["max_x"] = map_max_x
         map_size["min_y"] = map_min_y
         map_size["max_y"] = map_max_y
-        image_src = cv2.warpPerspective(image, H_bias, (map_width, map_height))
-        mask_src = cv2.warpPerspective(mask, H_bias, (map_width, map_height))
+        image_src_temp = cv2.warpPerspective(image, H_bias, (map_width, map_height))
+        mask_src_temp = cv2.warpPerspective(mask, H_bias, (map_width, map_height))
+        return image_dst_temp, mask_dst_temp, image_src_temp, mask_src_temp
+
 
     def get_patch_corner_points(self, H, w, h):
         geo_trans = GeoTrans(self.cfg, H)

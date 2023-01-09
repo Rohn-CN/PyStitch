@@ -17,7 +17,7 @@ class CFG:
 
     def from_config_yaml(self,config_path):
         self._dict = yaml.load(open(config_path,'r'),Loader=yaml.FullLoader)
-        self._dict['STATUS']['CONFIG'] = config_path
+        # self._dict['STATUS']['CONFIG'] = config_path
     
     def from_dict(self,config_dict):
         self._dict = config_dict
