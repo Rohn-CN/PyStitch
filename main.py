@@ -10,10 +10,11 @@ import numpy as np
 import data_io as io
 import os
 
-def get_data(image_dir, coords_path,force_zone_number,need_geo=True,):
+
+def get_data(image_dir, coords_path, force_zone_number, need_geo=True, ):
     image_list = io.get_image_list(image_dir)
     if need_geo:
-        coords_list = io.get_coords_utm_list(coords_path,force_zone_number)
+        coords_list = io.get_coords_utm_list(coords_path, force_zone_number)
     else:
         coords_list = [np.zeros((2,)) for _ in range(len(image_list))]
     return image_list, coords_list
@@ -103,7 +104,7 @@ def stitch(cfg, stitch_param: StitchParameter, image_current, coords_current_utm
                                                             stitch_param.top_n_center_points_2d_utm)
             patch_corner_points_utm = geo_trans.points_image_to_utm(patch_corner_points_image, trans_model)
             # stitch_param.add_coords(patch_corner_points_utm, fake_coords=False)
-        merge.patch_merge(stitch_param, image_src, mask_src, patch_info ,patch_corner_points_utm)
+        merge.patch_merge(stitch_param, image_src, mask_src, patch_info, patch_corner_points_utm)
         if cfg._dict["TRANS_MODEL"]["NEED_NORTH"]:
             patch_corner_points_utm = geo_trans.patch_points_rotate_north(patch_corner_points_utm)
 
@@ -114,19 +115,18 @@ def stitch(cfg, stitch_param: StitchParameter, image_current, coords_current_utm
         return key_frame_status
 
 
-def after_stitch(stitch_param:StitchParameter, image_save_dir, roi_save_dir, coords_save_path,first_write = False):
+def after_stitch(stitch_param: StitchParameter, image_save_dir, roi_save_dir, coords_save_path, first_write=False):
     assert len(stitch_param.corner_points_gps_list) == len(stitch_param.roi_list) and \
-           len(stitch_param.corner_points_gps_list) == stitch_param.stitch_count,"数量"
-    image_name = str(stitch_param.stitch_count).zfill(5)
+           len(stitch_param.corner_points_gps_list) == stitch_param.stitch_count, "数量"
+    number_stitch = str(stitch_param.stitch_count).zfill(5)
     # 存坐标
-    io.save_coords(coords_save_path,stitch_param.corner_points_gps_list[-1],first_write)
+    io.save_coords(coords_save_path, stitch_param.corner_points_gps_list[-1], number_stitch, first_write)
     # 存大图
-    image_dst_name = os.path.join(image_save_dir, image_name)
-    io.save_image(image_dst_name,stitch_param.image_dst)
-    # 存小兔
-    roi_name = os.path.join(roi_save_dir,image_name)
+    image_dst_name = os.path.join(image_save_dir, number_stitch + ".jpg")
+    io.save_image(image_dst_name, stitch_param.image_dst)
+    # 存小图
+    roi_name = os.path.join(roi_save_dir, number_stitch + ".png")
     io.save_image_png(roi_name, stitch_param.roi_list[-1], stitch_param.roi_mask_list[-1])
-
 
 
 if __name__ == "__main__":
@@ -149,13 +149,8 @@ if __name__ == "__main__":
     stitch_param = StitchParameter(cfg)
     first_image, first_coords = image_list[0], coords_list[0]
     stitch_init(cfg, stitch_param, first_image, first_coords)
-    after_stitch(stitch_param,image_save_dir,roi_save_dir,coords_save_path,first_write=True)
-    """
-            self.key_frame_status = {"too_few_matches": -1,
-                                 "excessive_overlap": -2,
-                                 "insufficient_overlap": -3,
-                                 "is_keyframe": 1}
-    """
+    after_stitch(stitch_param, image_save_dir, roi_save_dir, coords_save_path, first_write=True)
+
     for i in range(1, len(image_list)):
         image_current = image_list[i]
         coords_current_utm = coords_list[i]
@@ -164,8 +159,3 @@ if __name__ == "__main__":
             after_stitch(stitch_param, image_save_dir, roi_save_dir, coords_save_path)
         else:
             continue
-
-
-
-
-

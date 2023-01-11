@@ -83,4 +83,3 @@ class Optimizer:
         stitch_param.add_homo(H)
         corner_points_trans_2d = GeoTrans(self.cfg).transform_corner_points(w, h)
         stitch_param.add_trajectory(corner_points_trans_2d)
-

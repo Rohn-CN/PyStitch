@@ -10,17 +10,14 @@
 '''
 import yaml
 
+
 class CFG:
     def __init__(self) -> None:
         self._dict = {}
-        
 
-    def from_config_yaml(self,config_path):
-        self._dict = yaml.load(open(config_path,'r'),Loader=yaml.FullLoader)
+    def from_config_yaml(self, config_path):
+        self._dict = yaml.load(open(config_path, 'r'), Loader=yaml.FullLoader)
         # self._dict['STATUS']['CONFIG'] = config_path
-    
-    def from_dict(self,config_dict):
+
+    def from_dict(self, config_dict):
         self._dict = config_dict
-
-
-

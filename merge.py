@@ -5,6 +5,7 @@ from geo_trans import GeoTrans
 from frame import Frame
 from stitch_param import StitchParameter
 
+
 class Merge:
     def __init__(self, cfg):
         self.cfg = cfg
@@ -52,7 +53,7 @@ class Merge:
         return mask
 
     def create_gauss_pyr(self, image):
-        gauss_pyr = []
+        gauss_pyr = list()
         gauss_pyr.append(image.copy())
         G = image.copy()
         for i in range(self.pyramid_layer - 1):
@@ -63,7 +64,7 @@ class Merge:
     def create_laplace_pyr(self, image):
         gauss_pyr = self.create_gauss_pyr(image)
 
-        laplace_pyr = []
+        laplace_pyr = list()
         laplace_pyr.append(gauss_pyr[self.pyramid_layer - 1].copy())
 
         for i in range(self.pyramid_layer - 1, 0, -1):
@@ -73,7 +74,8 @@ class Merge:
             laplace_pyr.append(L)
         return laplace_pyr
 
-    def merge_by_weight(self, image_dst, mask_dst, image_src, mask_src):
+    @staticmethod
+    def merge_by_weight(image_dst, mask_dst, image_src, mask_src):
         """
         :param image_dst: w,h,3
         :param mask_dst: w,h
@@ -136,7 +138,7 @@ class Merge:
 
         return patch_info
 
-    def patch_merge(self, stitch_param:StitchParameter, image_src, mask_src, patch_info,patch_corner_points_utm):
+    def patch_merge(self, stitch_param: StitchParameter, image_src, mask_src, patch_info, patch_corner_points_utm):
         left_top = patch_info["left_top"]
         patch_width = patch_info["patch_width"]
         patch_height = patch_info["patch_height"]
@@ -154,9 +156,6 @@ class Merge:
         stitch_param.image_dst[left_top[0] + patch_height, left_top[1] + patch_width, :] = image_dst_patch
         stitch_param.mask_dst[left_top[0] + patch_height, left_top[1] + patch_width, :] = mask_dst_patch
 
-
-
-
         # 添加roi到stitch_param，检查是否需要正北输出
 
         if self.cfg._dict["TRANS_MODEL"]["NEED_NORTH"]:
@@ -167,9 +166,6 @@ class Merge:
         else:
             stitch_param.add_roi(image_dst_patch)
             stitch_param.add_roi_mask(mask_dst_patch)
-
-
-
 
     def auto_expand(self, H_bias, image_dst, mask_dst, map_size, H, mask, current_frame: Frame):
         image = current_frame.image
@@ -218,7 +214,6 @@ class Merge:
         mask_src_temp = cv2.warpPerspective(mask, H_bias, (map_width, map_height))
         return image_dst_temp, mask_dst_temp, image_src_temp, mask_src_temp
 
-
     def get_patch_corner_points(self, H, w, h):
         geo_trans = GeoTrans(self.cfg, H)
         patch_corner_points_trans_2d = geo_trans.transform_corner_points(w, h)
@@ -261,5 +256,3 @@ class Merge:
             homo, mask = cv2.findHomography(patch_corner_points_image_2d, patch_corner_points_utm_2d)
             res = cv2.warpPerspective(patch, homo, (int(resize_ratio * width), int(resize_ratio * height)))
         return res
-
-

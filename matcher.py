@@ -19,7 +19,7 @@ class Matcher:
         self.inliers = []
         self.goods = []
 
-    def calc_frame_keypoints_info(detector, frame):
+    def calc_frame_keypoints_info(self, detector, frame):
         if detector == "sift":
             sift = cv2.SIFT_create()
             keypoints, descriptor = sift.detectAndCompute(frame.image)

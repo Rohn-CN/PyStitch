@@ -3,6 +3,7 @@ import cv2
 from shapely.geometry import Polygon
 from config import CFG
 
+
 class GeoTrans:
     def __init__(self, cfg, H=np.ones((3, 3))) -> None:
         self.H = H
@@ -65,7 +66,6 @@ class GeoTrans:
         else:
             assert False, "specific mode not found"
 
-
     def points_image_to_utm(self, points_image, trans_model):
         """
         :param points_image: (4, 2)
@@ -85,7 +85,6 @@ class GeoTrans:
             return np.stack((x_utm, y_utm)).T
         else:
             assert False, "specific mode not found"
-
 
     @staticmethod
     def patch_points_rotate_north(patch_corner_points_utm_2d):
@@ -108,9 +107,9 @@ if __name__ == "__main__":
     config_file = r"D:\PyStitch\configfile\config.yaml"
     cfg = CFG()
     cfg.from_config_yaml(config_path=config_file)
-    points_utm = np.random.random((10,2)).tolist()
-    points_image = np.random.random((10,2)).tolist()
-    x = GeoTrans(cfg, H = np.eye(3))
+    points_utm = np.random.random((10, 2)).tolist()
+    points_image = np.random.random((10, 2)).tolist()
+    x = GeoTrans(cfg, H=np.eye(3))
     res = x.get_geo_transform_model(points_image, points_utm)
     res2 = x.points_image_to_utm(np.array(points_image), res)
     print(res2 - points_utm)
