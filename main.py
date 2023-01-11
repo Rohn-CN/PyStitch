@@ -80,6 +80,7 @@ def stitch(cfg, stitch_param: StitchParameter, image_current, coords_current_utm
         corner_points_trans_2d = geo_trans.transform_corner_points(current_frame.w, current_frame.h)
         relative_frame_idx = selector.get_relative_frames(current_frame, stitch_param, corner_points_trans_2d)
         # 利用相关帧进行优化
+        #TODO:这里到底要不要添加relativeframe
         optimizer.min_reproject_optimizer(current_frame, stitch_param)
         # 计算并扩充画布，并计算需要修改的patch
         image_dst, mask_dst, image_src, mask_src = merge.auto_expand(
