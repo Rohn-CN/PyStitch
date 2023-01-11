@@ -87,6 +87,21 @@ class GeoTrans:
             assert False, "specific mode not found"
 
 
+    @staticmethod
+    def patch_points_rotate_north(patch_corner_points_utm_2d):
+        """
+
+        :param patch_corner_points_utm_2d: 4 * 2
+        :return:
+        """
+        max_x = np.max(patch_corner_points_utm_2d[:, 0])
+        max_y = np.max(patch_corner_points_utm_2d[:, 1])
+        min_x = np.min(patch_corner_points_utm_2d[:, 0])
+        min_y = np.min(patch_corner_points_utm_2d[:, 1])
+        return np.array([[min_x, max_y],
+                         [max_x, max_y],
+                         [max_x, min_y],
+                         [min_x, min_y]])
 
 
 if __name__ == "__main__":

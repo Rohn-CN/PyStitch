@@ -15,6 +15,7 @@ TRANS_MODEL:
   TRAIN_NUM: 9
   GEO_TRANS_MODEL: four_param
   STITCH_TRANS_MODEL: homo # homo ; affine
+  NEED_NORTH: true
 
 STITCH_PARAMETER:
   MIN_OVERLAP: 0.1

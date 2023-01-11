@@ -1,6 +1,7 @@
 import numpy as np
 import utm
 
+
 class StitchParameter:
     def __init__(self, cfg):
         self.cfg = cfg
@@ -50,22 +51,22 @@ class StitchParameter:
     def add_roi(self, roi):
         self.roi_list.append(roi)
 
-    def add_roi_mask(self,roi_mask):
+    def add_roi_mask(self, roi_mask):
         self.roi_mask_list.append(roi_mask)
 
     def set_image_dst(self, image_dst):
         self.image_dst = image_dst
 
-    def set_mask_dst(self,mask_dst):
+    def set_mask_dst(self, mask_dst):
         self.mask_dst = mask_dst
 
-    def set_H_bias(self,H_bias):
+    def set_H_bias(self, H_bias):
         self.H_bias = H_bias
 
-    def add_top_n_center_points_2d_utm(self, top_n_center_points_2d_utm:np.ndarray):
+    def add_top_n_center_points_2d_utm(self, top_n_center_points_2d_utm: np.ndarray):
         self.top_n_center_points_2d_utm.append(top_n_center_points_2d_utm)
 
-    def add_top_n_center_points_2d_image(self, top_n_center_points_2d_image:np.ndarray):
+    def add_top_n_center_points_2d_image(self, top_n_center_points_2d_image: np.ndarray):
         self.top_n_center_points_2d_image.append(top_n_center_points_2d_image)
 
     def set_geo_trans_model(self, geo_trans_model):
@@ -74,16 +75,16 @@ class StitchParameter:
     def add_stitch_count(self):
         self.stitch_count += 1
 
-    def add_coords(self,corner_points_utm:np.ndarray,fake_coords = False):
-        if fake_coords:
+    def add_coords(self, corner_points_utm: np.ndarray):
+        if not np.any(corner_points_utm):
             self.corner_points_gps_list.append(np.zeros((4, 2)))
-            self.corner_points_utm_list.append(np.zeros((4,2)))
+            self.corner_points_utm_list.append(np.zeros((4, 2)))
         else:
             zone_number = self.cfg._dict["TRANS_MODEL"]["ZONE_NUMBER"]
             self.corner_points_utm_list.append(corner_points_utm)
             if not np.any(corner_points_utm):
                 self.corner_points_gps_list.append(np.zeros((4, 2)))
             else:
-                lat, lng = utm.to_latlon(corner_points_utm[:,0],corner_points_utm[:,1],zone_number,northern=True)
-                corner_points_gps = np.vstack([lat,lng]).T
+                lat, lng = utm.to_latlon(corner_points_utm[:, 0], corner_points_utm[:, 1], zone_number, northern=True)
+                corner_points_gps = np.vstack([lat, lng]).T
                 self.corner_points_gps_list.append(corner_points_gps)

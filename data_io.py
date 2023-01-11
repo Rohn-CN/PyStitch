@@ -34,7 +34,7 @@ def save_image_png(save_path, image, mask):
 
 def get_coords_utm_list(coords_file,force_zone_number):
     coords_gps = np.loadtxt(coords_file, delimiter=',')
-    easting, northing, _, _ = utm.from_latlon(coords_gps[:, 0], coords_gps[:, 1], force_zone_number=50)
+    easting, northing, _, _ = utm.from_latlon(coords_gps[:, 0], coords_gps[:, 1], force_zone_number=force_zone_number)
     coords_utm = np.vstack([easting, northing]).T
     return coords_utm
 

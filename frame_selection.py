@@ -24,6 +24,7 @@ class Selector:
                                  "excessive_overlap": -2,
                                  "insufficient_overlap": -3,
                                  "is_keyframe": 1}
+
         self.min_iou = cfg._dict["STITCH_PARAMETER"]["MIN_OVERLAP"]
         self.max_iou = cfg._dict["STITCH_PARAMETER"]["MAX_OVERLAP"]
 
@@ -84,5 +85,6 @@ class Selector:
                 relative_frame_overlap.append(overlap_list[idx])
 
         stitch_param.add_relative_frame_overlap(relative_frame_overlap)
+        stitch_param.frame_list[-1].set_relative_frame(relative_frame_overlap, relative_frame_idx)
         current_frame.set_relative_frame(relative_frame_overlap, relative_frame_idx)
         return relative_frame_idx

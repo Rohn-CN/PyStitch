@@ -31,13 +31,12 @@ class Merge:
         """
 
         :param image:
-        :param left_top: list:[row,col]
+        :param left_top: list:[col,row]
         :param width:
         :param height:
         :return:
         """
-        return image[left_top[0]:left_top[0] + height,
-               left_top[1]:left_top[1] + width, :]
+        return image[left_top[1]:left_top[1] + height, left_top[0]:left_top[0] + width, :]
 
     @staticmethod
     # TODO：设计函数位置
@@ -65,7 +64,7 @@ class Merge:
         gauss_pyr = self.create_gauss_pyr(image)
 
         laplace_pyr = []
-        laplace_pyr.append(gauss_pyr[self.pyramid_layer - 1])
+        laplace_pyr.append(gauss_pyr[self.pyramid_layer - 1].copy())
 
         for i in range(self.pyramid_layer - 1, 0, -1):
             GE = np.zeros((1, 1))
@@ -137,7 +136,7 @@ class Merge:
 
         return patch_info
 
-    def patch_merge(self, stitch_param:StitchParameter, image_src, mask_src, patch_info):
+    def patch_merge(self, stitch_param:StitchParameter, image_src, mask_src, patch_info,patch_corner_points_utm):
         left_top = patch_info["left_top"]
         patch_width = patch_info["patch_width"]
         patch_height = patch_info["patch_height"]
@@ -151,12 +150,25 @@ class Merge:
 
         image_dst_patch = self.create_patch(image_dst_patch, [0, 0], patch_width, patch_height)
         mask_dst_patch = self.create_patch(mask_dst_patch, [0, 0], patch_width, patch_height)
-        stitch_param.image_dst[left_top[0] + patch_height,left_top[1] + patch_width,:] = image_dst_patch
-        stitch_param.mask_dst[left_top[0] + patch_height,left_top[1] + patch_width[,:]] = mask_dst_patch
+        # 复制到dst
+        stitch_param.image_dst[left_top[0] + patch_height, left_top[1] + patch_width, :] = image_dst_patch
+        stitch_param.mask_dst[left_top[0] + patch_height, left_top[1] + patch_width, :] = mask_dst_patch
 
-        # 添加roi到stitch_param
-        stitch_param.add_roi(image_dst_patch)
-        stitch_param.add_roi_mask(mask_dst_patch)
+
+
+
+        # 添加roi到stitch_param，检查是否需要正北输出
+
+        if self.cfg._dict["TRANS_MODEL"]["NEED_NORTH"]:
+            image_dst_patch_north = self.patch_rotate_north(image_dst_patch, patch_corner_points_utm)
+            mask_dst_patch_north = self.patch_rotate_north(mask_dst_patch, patch_corner_points_utm)
+            stitch_param.add_roi(image_dst_patch_north)
+            stitch_param.add_roi_mask(mask_dst_patch_north)
+        else:
+            stitch_param.add_roi(image_dst_patch)
+            stitch_param.add_roi_mask(mask_dst_patch)
+
+
 
 
     def auto_expand(self, H_bias, image_dst, mask_dst, map_size, H, mask, current_frame: Frame):
@@ -224,41 +236,30 @@ class Merge:
         :param patch_corner_points_utm_2d:
         :return:
         """
-        h, w, c = patch.shape
-        max_x = np.max(patch_corner_points_utm_2d[:, 0])
-        min_x = np.min(patch_corner_points_utm_2d[:, 0])
-        max_y = np.max(patch_corner_points_utm_2d[:, 1])
-        min_y = np.min(patch_corner_points_utm_2d[:, 1])
+        if not np.any(patch_corner_points_utm_2d):
+            res = patch
+        else:
+            h, w, c = patch.shape
+            max_x = np.max(patch_corner_points_utm_2d[:, 0])
+            min_x = np.min(patch_corner_points_utm_2d[:, 0])
+            max_y = np.max(patch_corner_points_utm_2d[:, 1])
+            min_y = np.min(patch_corner_points_utm_2d[:, 1])
 
-        width = max_x - min_x
-        height = max_y - min_y
+            width = max_x - min_x
+            height = max_y - min_y
 
-        left_top = [min_x, max_y]
+            left_top = [min_x, max_y]
 
-        patch_corner_points_image_2d = np.array([0, 0], [w, 0], [w, h], [0, h])
-        resize_ratio = max(w / width, h / height)
+            patch_corner_points_image_2d = np.array([0, 0], [w, 0], [w, h], [0, h])
+            resize_ratio = max(w / width, h / height)
 
-        patch_corner_points_utm_2d[:, 0] -= min_x
-        patch_corner_points_utm_2d[:, 1] -= min_y
-        patch_corner_points_utm_2d[:, 1] = height - patch_corner_points_utm_2d[:, 1]
-        patch_corner_points_utm_2d *= resize_ratio
+            patch_corner_points_utm_2d[:, 0] -= min_x
+            patch_corner_points_utm_2d[:, 1] -= min_y
+            patch_corner_points_utm_2d[:, 1] = height - patch_corner_points_utm_2d[:, 1]
+            patch_corner_points_utm_2d *= resize_ratio
 
-        homo, mask = cv2.findHomography(patch_corner_points_image_2d, patch_corner_points_utm_2d)
-        res = cv2.warpPerspective(patch, homo, (int(resize_ratio * width), int(resize_ratio * height)))
+            homo, mask = cv2.findHomography(patch_corner_points_image_2d, patch_corner_points_utm_2d)
+            res = cv2.warpPerspective(patch, homo, (int(resize_ratio * width), int(resize_ratio * height)))
         return res
 
-    @staticmethod
-    def points_rotate_north(patch_corner_points_utm_2d):
-        """
 
-        :param patch_corner_points_utm_2d: 4 * 2
-        :return:
-        """
-        max_x = np.max(patch_corner_points_utm_2d[:, 0])
-        max_y = np.max(patch_corner_points_utm_2d[:, 1])
-        min_x = np.min(patch_corner_points_utm_2d[:, 0])
-        min_y = np.min(patch_corner_points_utm_2d[:, 1])
-        return np.array([[min_x, max_y],
-                         [max_x, max_y],
-                         [max_x, min_y],
-                         [min_x, min_y]])
