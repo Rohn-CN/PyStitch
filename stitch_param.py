@@ -81,5 +81,9 @@ class StitchParameter:
         else:
             zone_number = self.cfg._dict["TRANS_MODEL"]["ZONE_NUMBER"]
             self.corner_points_utm_list.append(corner_points_utm)
-            corner_points_gps = utm.to_latlon(corner_points_utm[:,0],corner_points_utm[:,1],zone_number)
-            self.corner_points_gps_list.append(corner_points_gps)
+            if not np.any(corner_points_utm):
+                self.corner_points_gps_list.append(np.zeros((4, 2)))
+            else:
+                lat, lng = utm.to_latlon(corner_points_utm[:,0],corner_points_utm[:,1],zone_number,northern=True)
+                corner_points_gps = np.vstack([lat,lng]).T
+                self.corner_points_gps_list.append(corner_points_gps)

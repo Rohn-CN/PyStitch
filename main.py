@@ -42,7 +42,7 @@ def stitch_init(cfg, stitch_param: StitchParameter, first_image, first_coords_ut
     stitch_param.add_frame(frame, del_image=True)
     stitch_param.add_stitch_count()
     # 添加四角坐标
-    stitch_param.add_coords(np.zeros((4,2)),fake_coords=True)
+    stitch_param.add_coords(np.zeros((4, 2)), fake_coords=True)
 
 
 def stitch(cfg, stitch_param: StitchParameter, image_current, coords_current_utm):
@@ -89,8 +89,8 @@ def stitch(cfg, stitch_param: StitchParameter, image_current, coords_current_utm
         # TODO:完成后续部分，查看推送上去的init的中心点是不是设置成了w/2
         else:
             patch_corner_points_image = merge.get_patch_corner_points(stitch_param.homo_list[-1],stitch_param.w, stitch_param.h)
-            trans_model = geo_trans.get_geo_transform_model(stitch_param.top_n_center_points_2d_image,stitch_param.top_n_center_points_2d_utm)
-            patch_corner_points_utm = geo_trans.points_image_to_utm(patch_corner_points_image,trans_model)
+            trans_model = geo_trans.get_geo_transform_model(stitch_param.top_n_center_points_2d_image, stitch_param.top_n_center_points_2d_utm)
+            patch_corner_points_utm = geo_trans.points_image_to_utm(patch_corner_points_image, trans_model)
             stitch_param.add_coords(patch_corner_points_utm)
         stitch_param.add_frame(current_frame, del_image=True)
         return key_frame_status
@@ -100,7 +100,20 @@ def stitch(cfg, stitch_param: StitchParameter, image_current, coords_current_utm
 
 if __name__ == "__main__":
     config_file = "/Users/ronghao/code/stitch/pystitch/configfile"
-    mode = "local"
 
     cfg = CFG()
     cfg.from_config_yaml(config_path=config_file)
+    # 图像和坐标读取和保存目录
+    image_dir = cfg._dict["OTHER"]["IMAGE_PATH"]
+    image_save_dir = cfg._dict["OTHER"]["IMAGE_SAVE_DIR"]
+    roi_save_dir = cfg._dict["OTHER"]["ROT_SAVE_DIR"]
+    coords_path = cfg._dict["OTHER"]["COORDS_PATH"]
+    coords_save_path = cfg._dict["OTHER"]["COORDS_SAVE_PATH"]
+
+    # 是否需要geo信息
+    need_geo = cfg._dict["NEED_GEO"]["IMAGE_DIR"]
+
+
+
+
+

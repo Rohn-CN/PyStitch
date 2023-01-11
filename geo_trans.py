@@ -47,6 +47,8 @@ class GeoTrans:
         :param points_list_utm:    list (n, 2)
         :return:
         """
+        if points_list_utm[0][0] == 0 and points_list_utm[0][1] == 0:
+            return np.zeros((4, 1))
         num_pts = len(points_list_image)
         if self.trans_mode == "four_param":
             A = np.zeros((num_pts * 2, 4))
@@ -71,6 +73,8 @@ class GeoTrans:
         :return:
         """
         if self.trans_mode == "four_param":
+            if not np.any(trans_model):
+                return np.zeros((4, 2))
             assert trans_model.shape == (4, 1)
             A = trans_model[0]
             B = trans_model[1]
