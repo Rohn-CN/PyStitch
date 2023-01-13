@@ -10,8 +10,9 @@ def get_image_list(image_folder):
                                image_name_list))
     image_list = []
     for image_path in image_path_list:
-        image = cv2.imread(image_path)
-        image_list.append(image)
+        if image_path.endswith(".jpg") or image_path.endswith(".png"):
+            image = cv2.imread(image_path)
+            image_list.append(image)
     return image_list
 
 
@@ -26,7 +27,8 @@ def save_image_png(save_path, image, mask):
         os.makedirs(save_path)
     image_png = np.zeros((image.shape[0], image.shape[1], 4))
     alpha = np.zeros((image.shape[0], image.shape[1]))
-    alpha[np.where(mask != 0)] = 255
+    assert alpha.shape == mask.shape
+    alpha[mask != 0] = 255
     image_png[..., : 3] = image
     image_png[..., 3] = alpha
     cv2.imwrite(save_path, image_png, [cv2.IMWRITE_PNG_COMPRESSION, 0])
@@ -45,8 +47,10 @@ def get_coords_gps_list(coords_file):
 
 
 def save_coords(save_file, coord_gps, num_coord, first_write=False):
-    lat, lng = coord_gps
-    coord_str = num_coord + "," + str(lat) + "," + str(lng)
+    coord_str = num_coord + ","
+    for i in range(4):
+        gps = coord_gps[i]
+        coord_str += (str(gps[0]) + str(gps[1]))
     with open(save_file, "a") as f:
         # 查看txt文件是否为空
         if not os.path.getsize(save_file) == 0:

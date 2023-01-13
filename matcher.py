@@ -22,7 +22,7 @@ class Matcher:
     def calc_frame_keypoints_info(self, detector, frame):
         if detector == "sift":
             sift = cv2.SIFT_create()
-            keypoints, descriptor = sift.detectAndCompute(frame.image)
+            keypoints, descriptor = sift.detectAndCompute(frame.image, None)
             frame.set_keypoints_info(keypoints, descriptor)
         else:
             assert False, "specific detector not found"

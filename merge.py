@@ -42,12 +42,12 @@ class Merge:
     @staticmethod
     # TODO：设计函数位置
     def create_weight_mask(w, h):
-        mask = np.zeros((w, h))
+        mask = np.zeros((h, w))
         x0 = w // 2
         y0 = h // 2
-        for i in range(w):
+        for i in range(h):
             dy = np.power(i - y0, 2)
-            for j in range(h):
+            for j in range(w):
                 dx = np.power(j - x0, 2)
                 mask[i][j] = 1 - np.sqrt(dx + dy) / np.sqrt(x0 * x0 + y0 * y0)
         return mask

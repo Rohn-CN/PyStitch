@@ -26,7 +26,7 @@ class Frame:
         self.descriptor = descriptor
 
     def resize(self):
-        self.image = cv2.resize(self.image, fx=self.resize_ratio, fy=self.resize_ratio)
+        self.image = cv2.resize(self.image, None, fx=self.resize_ratio, fy=self.resize_ratio)
         self.h, self.w, self.c = self.image.shape
 
     def crop(self):
@@ -34,7 +34,7 @@ class Frame:
         h = int(self.h * self.resize_ratio)
         crop_border_w = (self.w - w) // 2
         crop_border_h = (self.h - h) // 2
-        self.image = self.image[crop_border_w:crop_border_w + w, crop_border_h:crop_border_h + h, :]
+        self.image = self.image[crop_border_h:crop_border_h + h, crop_border_w:crop_border_w + w, :]
         self.w = w
         self.h = h
 

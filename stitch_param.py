@@ -17,7 +17,7 @@ class StitchParameter:
         self.homo_list = []
         self.w = 0
         self.h = 0
-        self.map_size = dict["max_x":self.w, "max_y":self.h, "min_x":0, "min_y":0]
+        self.map_size = dict(max_x=self.w, max_y=self.h, min_x=0, min_y=0)
         self.mask = np.zeros((self.h, self.w))
         self.top_n_center_points_2d_utm = []
         self.top_n_center_points_2d_image = []
@@ -29,7 +29,8 @@ class StitchParameter:
             self.w = frame.w
             self.h = frame.h
         self.frame_list.append(frame)
-
+    def set_mask(self,mask):
+        self.mask = mask
     def add_trajectory(self, corner_points_2d):
         self.frame_trajectory.append(corner_points_2d)
 

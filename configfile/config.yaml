@@ -26,11 +26,11 @@ STITCH_PARAMETER:
 
 OTHER:
   NEED_GEO: true
-  IMAGE_DIR: todo
-  IMAGE_SAVE_PATH: todo
-  ROI_SAVE_PATH: todo
-  COORDS_PATH: todo
-  COORDS_SAVE_PATH: todo
+  IMAGE_DIR: /Users/ronghao/code/stitch/IMAGE_STITCH-geo_new/dataset/865_frame
+  IMAGE_SAVE_DIR: /Users/ronghao/TempFile/pystitch_output/0112/frame
+  ROI_SAVE_DIR: /Users/ronghao/TempFile/pystitch_output/0112/roi
+  COORDS_PATH: /Users/ronghao/code/stitch/IMAGE_STITCH-geo_new/dataset/865_coords.txt
+  COORDS_SAVE_PATH: /Users/ronghao/TempFile/pystitch_output/0112/coords.txt
   SAVE_FORMAT: png
 
 

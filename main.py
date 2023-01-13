@@ -26,10 +26,11 @@ def stitch_init(cfg, stitch_param: StitchParameter, first_image, first_coords_ut
     frame.crop()
     frame.resize()
     detector = cfg._dict["MATCH_PARAMETER"]["DETECTOR"]
-    Matcher.calc_frame_keypoints_info(detector, frame)
+    matcher = Matcher(cfg)
+    matcher.calc_frame_keypoints_info(detector, frame)
 
     # mask初始化
-    stitch_param.mask = Merge.create_weight_mask(frame.w, frame.h)
+    stitch_param.set_mask(Merge.create_weight_mask(frame.w, frame.h))
     # H_bias和homo初始化
     stitch_param.set_H_bias(np.eye(3))
     stitch_param.add_homo(np.eye(3))
@@ -41,7 +42,8 @@ def stitch_init(cfg, stitch_param: StitchParameter, first_image, first_coords_ut
     # 设置 mask_dst和 image_dst 和增加roi
     stitch_param.set_image_dst(frame.image)
     stitch_param.set_mask_dst(stitch_param.mask)
-    stitch_param.add_roi(frame)
+    stitch_param.add_roi(frame.image)
+    stitch_param.add_roi_mask(stitch_param.mask.copy())
 
     # 设置画布大小
     stitch_param.set_map_size(frame.w, frame.h, 0, 0)
@@ -54,6 +56,7 @@ def stitch_init(cfg, stitch_param: StitchParameter, first_image, first_coords_ut
     stitch_param.add_stitch_count()
     # 添加四角坐标
     stitch_param.add_coords(np.zeros((4, 2)))
+    print("init finish")
 
 
 def stitch(cfg, stitch_param: StitchParameter, image_current, coords_current_utm):
@@ -122,23 +125,28 @@ def after_stitch(stitch_param: StitchParameter, image_save_dir, roi_save_dir, co
     number_stitch = str(stitch_param.stitch_count).zfill(5)
     # 存坐标
     io.save_coords(coords_save_path, stitch_param.corner_points_gps_list[-1], number_stitch, first_write)
+    print("存坐标"+ str(number_stitch) +"\n")
     # 存大图
     image_dst_name = os.path.join(image_save_dir, number_stitch + ".jpg")
     io.save_image(image_dst_name, stitch_param.image_dst)
+    print("存大图" + str(number_stitch) + "\n")
+
     # 存小图
     roi_name = os.path.join(roi_save_dir, number_stitch + ".png")
     io.save_image_png(roi_name, stitch_param.roi_list[-1], stitch_param.roi_mask_list[-1])
+    print("存小图" + str(number_stitch) + "\n")
+
 
 
 if __name__ == "__main__":
-    config_file = "/Users/ronghao/code/stitch/pystitch/configfile"
+    config_file = "/Users/ronghao/code/stitch/pystitch/configfile/config.yaml"
 
     cfg = CFG()
     cfg.from_config_yaml(config_path=config_file)
     # 图像和坐标读取和保存目录
-    image_dir = cfg._dict["OTHER"]["IMAGE_PATH"]
+    image_dir = cfg._dict["OTHER"]["IMAGE_DIR"]
     image_save_dir = cfg._dict["OTHER"]["IMAGE_SAVE_DIR"]
-    roi_save_dir = cfg._dict["OTHER"]["ROT_SAVE_DIR"]
+    roi_save_dir = cfg._dict["OTHER"]["ROI_SAVE_DIR"]
     coords_path = cfg._dict["OTHER"]["COORDS_PATH"]
     coords_save_path = cfg._dict["OTHER"]["COORDS_SAVE_PATH"]
 
@@ -151,7 +159,7 @@ if __name__ == "__main__":
     first_image, first_coords = image_list[0], coords_list[0]
     stitch_init(cfg, stitch_param, first_image, first_coords)
     after_stitch(stitch_param, image_save_dir, roi_save_dir, coords_save_path, first_write=True)
-
+    print("init finish")
     for i in range(1, len(image_list)):
         image_current = image_list[i]
         coords_current_utm = coords_list[i]
